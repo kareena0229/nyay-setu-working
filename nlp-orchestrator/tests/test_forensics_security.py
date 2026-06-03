@@ -55,6 +55,8 @@ async def test_forensics_pipeline_sanitizes_description_before_legal_lookup(monk
     gemini_module = types.ModuleType("services.gemini_analyzer")
     groq_module = types.ModuleType("services.groq_router")
     report_module = types.ModuleType("services.report_generator")
+    sse_module = types.ModuleType("sse_starlette")
+    sse_submodule = types.ModuleType("sse_starlette.sse")
 
     async def placeholder_async(*_args, **_kwargs):
         return None
@@ -63,10 +65,13 @@ async def test_forensics_pipeline_sanitizes_description_before_legal_lookup(monk
     groq_module.legal_section_lookup = placeholder_async
     report_module.generate_report = lambda *_args, **_kwargs: {}
     report_module.generate_avatar_script = lambda *_args, **_kwargs: ""
+    sse_submodule.EventSourceResponse = object
 
     monkeypatch.setitem(sys.modules, "services.gemini_analyzer", gemini_module)
     monkeypatch.setitem(sys.modules, "services.groq_router", groq_module)
     monkeypatch.setitem(sys.modules, "services.report_generator", report_module)
+    monkeypatch.setitem(sys.modules, "sse_starlette", sse_module)
+    monkeypatch.setitem(sys.modules, "sse_starlette.sse", sse_submodule)
 
     from routers import forensics
 
