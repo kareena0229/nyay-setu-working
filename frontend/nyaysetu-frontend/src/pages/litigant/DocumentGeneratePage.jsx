@@ -10,6 +10,8 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import lawgpt from '../../services/lawgptService';
 import styles from './DocumentGeneratePage.module.css';
+import { documentGenerateAPI } from '../../services/api';
+
 const DOC_TYPES = [
     {
         id: 'affidavit',
@@ -281,9 +283,58 @@ const DocumentGeneratePage = () => {
 
     const selectedDocInfo = DOC_TYPES.find(d => d.id === selectedType);
 
-    
+    // ── Shared styles ────────────────────────────────────────────────────────
 
-   
+    const cardStyle = {
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--color-border)',
+        borderRadius: '1rem',
+        padding: '1.5rem',
+    };
+
+    const inputStyle = {
+        width: '100%',
+        padding: '0.75rem 1rem',
+        border: 'var(--color-border)',
+        borderRadius: '0.5rem',
+        fontSize: '0.9rem',
+        outline: 'none',
+        transition: 'border-color 0.2s',
+        background: 'var(--bg-surface)',
+        fontFamily: 'inherit',
+        color:'var(--text-main)'
+    };
+
+    const labelStyle = {
+        display: 'block',
+        fontSize: '0.85rem',
+        fontWeight: 600,
+        color: 'var(--text-main)',
+        marginBottom: '0.35rem',
+    };
+
+    const btnPrimary = {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        padding: '0.75rem 1.5rem',
+        background: 'var(--color-primary)',
+        color: 'white',
+        border: 'none',
+        borderRadius: '0.5rem',
+        fontSize: '0.9rem',
+        fontWeight: 600,
+        cursor: 'pointer',
+        transition: 'all 0.2s',
+    };
+
+    const btnOutline = {
+        ...btnPrimary,
+        background: 'transparent',
+        color: 'var(--color-primary)',
+        border: '1px solid var(--color-primary)',
+    };
+
     // ── Render ────────────────────────────────────────────────────────────────
 
     return (
@@ -359,10 +410,11 @@ const DocumentGeneratePage = () => {
                                             whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}
                                             whileTap={{ scale: 0.98 }}
                                             onClick={() => selectDocType(docType.id)}
-                                            className={styles.docCard}
-                                             style={{
-                                             cursor: 'pointer',
-                                             
+                                            style={{
+                                                ...cardStyle,
+                                                cursor: 'pointer',
+                                                borderColor: selectedType === docType.id ? docType.color : '#E5E7EB',
+                                                transition: 'all 0.2s',
                                             }}
                                         >
                                             <div style={{
@@ -418,13 +470,13 @@ const DocumentGeneratePage = () => {
                                 </div>
                             )}
 
-                            <div className={styles.cardContent}>
+                            <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 {/* Common fields */}
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                                     <div>
-                                        <label className={styles.label}>Petitioner Name *</label>
+                                        <label style={labelStyle}>Petitioner Name *</label>
                                         <input name="petitionerName" value={form.petitionerName} onChange={handleInputChange}
-                                            className={styles.input} placeholder="Full legal name" />
+                                            style={inputStyle} placeholder="Full legal name" />
                                         {validationErrors.petitionerName && (
                                             <div style={{ color: '#DC2626', fontSize: '0.85rem', marginTop: '0.35rem' }}>
                                                 {validationErrors.petitionerName}
@@ -432,9 +484,9 @@ const DocumentGeneratePage = () => {
                                         )}
                                     </div>
                                     <div>
-                                        <label className={styles.label}>Incident Date *</label>
+                                        <label style={labelStyle}>Incident Date *</label>
                                         <input name="incidentDate" type="date" value={form.incidentDate} onChange={handleInputChange}
-                                           className={styles.input}/>
+                                            style={inputStyle} />
                                         {validationErrors.incidentDate && (
                                             <div style={{ color: '#DC2626', fontSize: '0.85rem', marginTop: '0.35rem' }}>
                                                 {validationErrors.incidentDate}
@@ -444,40 +496,49 @@ const DocumentGeneratePage = () => {
                                 </div>
 
                                 <div>
-                                    <label className={styles.label}>Petitioner Address *</label>
-                                    <input name="petitionerAddress" value={form.petitionerAddress} onChange={handleInputChange}
-                                        className={styles.input} placeholder="Complete residential address" />
-                                    {validationErrors.petitionerAddress && (
-                                        <div style={{ color: '#DC2626', fontSize: '0.85rem', marginTop: '0.35rem' }}>
-                                            {validationErrors.petitionerAddress}
-                                        </div>
-                                    )}
-                                </div>
-
+    <label className={styles.label}>Petitioner Address *</label>
+    <input
+        name="petitionerAddress"
+        value={form.petitionerAddress}
+        onChange={handleInputChange}
+        className={styles.input}
+        placeholder="Complete residential address"
+    />
+    {validationErrors.petitionerAddress && (
+        <div style={{ color: '#DC2626', fontSize: '0.85rem', marginTop: '0.35rem' }}>
+            {validationErrors.petitionerAddress}
+        </div>
+    )}
+</div>
                                 {/* Respondent fields (not for RTI) */}
                                 {selectedType !== 'rti' && (
                                     <>
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                                             <div>
-                                                <label className={styles.label}>Respondent Name *</label>
+                                                <label style={labelStyle}>Respondent Name *</label>
                                                 <input name="respondentName" value={form.respondentName} onChange={handleInputChange}
-                                                   className={styles.input} placeholder="Respondent's full name" />
+                                                    style={inputStyle} placeholder="Respondent's full name" />
                                                     {validationErrors.respondentName && (
                                                         <div style={{ color: '#DC2626', fontSize: '0.85rem', marginTop: '0.35rem' }}>
                                                             {validationErrors.respondentName}
                                                         </div>
                                                     )}
                                             </div>
-                                            <div>
-                                                <label className={styles.label}>Respondent Address *</label>
-                                                <input name="respondentAddress" value={form.respondentAddress} onChange={handleInputChange}
-                                                    className={styles.input} placeholder="Respondent's address" />
-                                                    {validationErrors.respondentAddress && (
-                                                        <div style={{ color: '#DC2626', fontSize: '0.85rem', marginTop: '0.35rem' }}>
-                                                            {validationErrors.respondentAddress}
-                                                        </div>
-                                                    )}
-                                            </div>
+                                           <div>
+    <label className={styles.label}>Respondent Address *</label>
+    <input
+        name="respondentAddress"
+        value={form.respondentAddress}
+        onChange={handleInputChange}
+        className={styles.input}
+        placeholder="Respondent's address"
+    />
+    {validationErrors.respondentAddress && (
+        <div style={{ color: '#DC2626', fontSize: '0.85rem', marginTop: '0.35rem' }}>
+            {validationErrors.respondentAddress}
+        </div>
+    )}
+</div>
                                         </div>
                                     </>
                                 )}
@@ -486,9 +547,9 @@ const DocumentGeneratePage = () => {
                                 {selectedType === 'rti' && (
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                                         <div>
-                                            <label className={styles.label}>Department Name *</label>
+                                            <label style={labelStyle}>Department Name *</label>
                                             <input name="departmentName" value={form.departmentName} onChange={handleInputChange}
-                                                className={styles.input} placeholder="e.g. Ministry of Finance" />
+                                                style={inputStyle} placeholder="e.g. Ministry of Finance" />
                                                 {validationErrors.departmentName && (
                                                     <div style={{ color: '#DC2626', fontSize: '0.85rem', marginTop: '0.35rem' }}>
                                                         {validationErrors.departmentName}
@@ -496,9 +557,9 @@ const DocumentGeneratePage = () => {
                                                 )}
                                         </div>
                                         <div>
-                                            <label className={styles.label}>PIO Name (optional)</label>
+                                            <label style={labelStyle}>PIO Name (optional)</label>
                                             <input name="pioName" value={form.pioName} onChange={handleInputChange}
-                                                className={styles.input} placeholder="Public Information Officer" />
+                                                style={inputStyle} placeholder="Public Information Officer" />
                                                 {validationErrors.pioName && (
                                                     <div style={{ color: '#DC2626', fontSize: '0.85rem', marginTop: '0.35rem' }}>
                                                         {validationErrors.pioName}
@@ -511,9 +572,9 @@ const DocumentGeneratePage = () => {
                                 {/* Complaint-specific */}
                                 {selectedType === 'complaint' && (
                                     <div>
-                                        <label className={styles.label}>Court Name (optional)</label>
+                                        <label style={labelStyle}>Court Name (optional)</label>
                                         <input name="courtName" value={form.courtName} onChange={handleInputChange}
-                                            className={styles.input} placeholder="e.g. District Court, Patiala House" />
+                                            style={inputStyle} placeholder="e.g. District Court, Patiala House" />
                                             {validationErrors.courtName && (
                                                 <div style={{ color: '#DC2626', fontSize: '0.85rem', marginTop: '0.35rem' }}>
                                                     {validationErrors.courtName}
@@ -523,13 +584,11 @@ const DocumentGeneratePage = () => {
                                 )}
 
                                 <div>
-                                    <label className={styles.label}>
+                                    <label style={labelStyle}>
                                         {selectedType === 'rti' ? 'Information Sought *' : 'Case Description *'}
                                     </label>
                                     <textarea name="caseDescription" value={form.caseDescription} onChange={handleInputChange}
-                                        className={styles.input}
-                                        style={{ minHeight: '70px' }}
-                                     
+                                        style={{ ...inputStyle, minHeight: '100px', resize: 'vertical' }}
                                         placeholder={selectedType === 'rti'
                                             ? 'Describe the information you want to obtain...'
                                             : 'Describe the facts of the case in detail...'
@@ -545,14 +604,10 @@ const DocumentGeneratePage = () => {
                                 {/* Relief sought (not for RTI) */}
                                 {selectedType !== 'rti' && (
                                     <div>
-                                        <label className={styles.label}>Relief Sought *</label>
-                                       <textarea
-                                        name="reliefSought"
-                                        value={form.reliefSought}
-                                        onChange={handleInputChange}
-                                        className={styles.textarea}
-                                        style={{ minHeight: '70px', resize: 'vertical' }}
-                                        placeholder="What outcome or remedy are you seeking?"
+                                        <label style={labelStyle}>Relief Sought *</label>
+                                        <textarea name="reliefSought" value={form.reliefSought} onChange={handleInputChange}
+                                            style={{ ...inputStyle, minHeight: '70px', resize: 'vertical' }}
+                                            placeholder="What outcome or remedy are you seeking?"
                                         />
                                         {validationErrors.reliefSought && (
                                             <div style={{ color: '#DC2626', fontSize: '0.85rem', marginTop: '0.35rem' }}>
@@ -590,13 +645,17 @@ const DocumentGeneratePage = () => {
 
                                 {/* Actions */}
                                 <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '0.5rem' }}>
-                                    <button onClick={() => setStep(1)} className={styles.btnOutline}>
+                                    <button onClick={() => setStep(1)} style={btnOutline}>
                                         <ArrowLeft size={16} /> Back
                                     </button>
                                     <button
                                         onClick={handleGeneratePreview}
                                         disabled={!isFormValid() || isGenerating}
-                                        className={styles.btnPrimary}
+                                        style={{
+                                            ...btnPrimary,
+                                            opacity: (!isFormValid() || isGenerating) ? 0.5 : 1,
+                                            cursor: (!isFormValid() || isGenerating) ? 'not-allowed' : 'pointer',
+                                        }}
                                     >
                                         {isGenerating ? (
                                             <>
@@ -651,7 +710,7 @@ const DocumentGeneratePage = () => {
                             </div>
 
                             {/* Document preview */}
-                            <div className={styles.card} style={{ marginBottom: '1rem' }}>
+                            <div style={{ ...cardStyle, marginBottom: '1rem' }}>
                                 <div style={{
                                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                                     marginBottom: '1rem', paddingBottom: '0.75rem',
@@ -728,19 +787,19 @@ const DocumentGeneratePage = () => {
 
                             {/* Actions */}
                             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '0.75rem' }}>
-                                <button onClick={() => { setStep(2); setGeneratedDoc(null); }} className={styles.btnOutline}>
+                                <button onClick={() => { setStep(2); setGeneratedDoc(null); }} style={btnOutline}>
                                     <ArrowLeft size={16} /> Edit Fields
                                 </button>
                                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                                     <button
                                         onClick={handleCopyToClipboard}
                                         disabled={isCopying}
-                                        className={styles.btnOutline}
-                                style={{
-                                minWidth: '180px',
-                                opacity: isCopying ? 0.6 : 1,
-                                cursor: isCopying ? 'not-allowed' : 'pointer',
-                                }}
+                                        style={{
+                                            ...btnOutline,
+                                            minWidth: '180px',
+                                            opacity: isCopying ? 0.6 : 1,
+                                            cursor: isCopying ? 'not-allowed' : 'pointer',
+                                        }}
                                     >
                                         {isCopying ? (
                                             <>
@@ -756,11 +815,13 @@ const DocumentGeneratePage = () => {
                                     <button
                                         onClick={handleDownloadDocx}
                                         disabled={isDownloading}
-                                       
-                                        className={styles.btnPrimary}
                                         style={{
-                                    opacity: isDownloading ? 0.7 : 1
-                     }}
+                                            ...btnPrimary,
+                                            background: '#2563EB',
+                                            opacity: isDownloading ? 0.6 : 1,
+                                            cursor: isDownloading ? 'not-allowed' : 'pointer',
+                                            minWidth: '180px',
+                                        }}
                                     >
                                         {isDownloading ? (
                                             <>
@@ -774,15 +835,16 @@ const DocumentGeneratePage = () => {
                                         )}
                                     </button>
                                     <button
-                                    onClick={handleDownloadPdf}
-                                    disabled={isDownloading}
-                                    className={styles.btnPrimary}
-                                    style={{
-                                    opacity: isDownloading ? 0.7 : 1
-                                }}
-                        >
-
-                                    
+                                        onClick={handleDownloadPdf}
+                                        disabled={isDownloading}
+                                        style={{
+                                            ...btnPrimary,
+                                            background: '#059669',
+                                            opacity: isDownloading ? 0.6 : 1,
+                                            cursor: isDownloading ? 'not-allowed' : 'pointer',
+                                            minWidth: '180px',
+                                        }}
+                                    >
                                         {isDownloading ? (
                                             <>
                                                 <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
